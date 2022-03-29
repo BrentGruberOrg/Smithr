@@ -10,12 +10,3 @@ description: |
 dependencies:
   admiral:
     github: jwaldrip/admiral.cr
-#   pg:
-#     github: will/crystal-pg
-#     version: "~> 0.5"
-
-# development_dependencies:
-#   webmock:
-#     github: manastech/webmock.cr
-
-# license: MIT
