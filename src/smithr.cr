@@ -4,6 +4,8 @@ require "./build.cr"
 class Smithr < Admiral::Command
     # Smithr is a command line Interface for building and using linux autoinstall isos
 
+    define_version "0.0.1"
+
     define_help description: "A command for building and using linux autoinstall isos"
 
     # Register Sub commands
