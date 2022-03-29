@@ -1,5 +1,8 @@
 require "admiral"
 
+class UninstalledException < Exception
+end
+
 class Build < Admiral::Command
     # Build will create a new iso image based on given values
     define_help description: "Build a new autoinstall iso image"
@@ -41,13 +44,44 @@ class Build < Admiral::Command
     # example:
     #   smithr build -d /path/to/file/resulting_image.iso
     define_flag destination : String,
-                description: "Where to write the resulting iso file"
+                description: "Where to write the resulting iso file",
                 short: d,
-                default: "output.iso"
+                default: "output.iso",
                 required: false
+
+    # Check if a requirement exists in the current filesystem
+    def check_req(name)
+
+        req = system "command -v #{name}"
+        if !req
+            raise UninstalledException.new("🛠 Please install #{name} to continue")
+        end
+    end
 
 
     def run
-        puts "Hello #{flags.all_in_one || "World"}"
+        # Intro prints
+        puts "-----------------"
+        puts "Welcome to Smithr"
+        puts "-----------------"
+        puts "\n"
+
+        # Check all system requirements
+        puts "🔎 Checking for required utilities..."
+
+        begin
+            check_req("xorriso")
+            check_req("sed")
+            check_req("curl")
+            check_req("gpg")
+        rescue ex
+            abort(ex)
+        end
+
+        puts "👍 All required utilities are installed."
+
+        # Check for source flag
+
+
     end
 end

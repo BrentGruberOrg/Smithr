@@ -6,7 +6,7 @@ class Smithr < Admiral::Command
 
     define_version "0.0.1"
 
-    define_help description: "A command for building and using linux autoinstall isos"
+    define_help description: "💁  A command for building and using linux autoinstall isos"
 
     # Register Sub commands
     register_sub_command build : Build, description: "Build a new iso"
