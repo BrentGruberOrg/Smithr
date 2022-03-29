@@ -1,0 +1,21 @@
+name: Smithr
+version: 0.1.0
+
+authors:
+- name brent.gruber77@gmail.com
+
+description: |
+  Smithr is a simple command line tool for generating linux autoinstall isos
+
+dependencies:
+  admiral:
+    github: jwaldrip/admiral.cr
+#   pg:
+#     github: will/crystal-pg
+#     version: "~> 0.5"
+
+# development_dependencies:
+#   webmock:
+#     github: manastech/webmock.cr
+
+# license: MIT
