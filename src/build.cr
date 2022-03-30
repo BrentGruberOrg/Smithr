@@ -180,9 +180,7 @@ class Build < Admiral::Command
 
     # repackage iso and write to destination
     def repackage()
-        Process.run("cd", args: {"#{tempdir.to_s}"}) 
-        Process.run("xorriso", args: {"-as mkisofs -r -V ubuntu-autoinstall -J -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -boot-info-table -input-charset utf-8 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -o #{destination_iso} . &>/dev/null"})
-        Process.run("cd", args: {"-"})
+        Process.run("xorriso", args: {"-as mkisofs -r -V ubuntu-autoinstall -J -b #{tempdir.to_s}/isolinux/isolinux.bin -c #{tempdir.to_s}/isolinux/boot.cat -no-emul-boot -boot-load-size 4 -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -boot-info-table -input-charset utf-8 -eltorito-alt-boot -e #{tempdir.to_s}/boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -o #{destination_iso} . &>/dev/null"})
     end
 
 
