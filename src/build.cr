@@ -145,17 +145,17 @@ class Build < Admiral::Command
 
     # Extract source iso image to temp directory
     def extract_iso_image()
-        Process.run("xorriso", args: {"-osirrox on -indev #{@source_path} -extract / #{@tempdir.to_s} &>/dev/null"})
-        Process.run("chmod", args: {"-R u+w #{@tempdir.to_s}"})
-        Process.run("rm", args: {"-rf #{@tempdir.to_s}/'[BOOT]'"})
+        Process.run("xorriso", args: ["-osirrox on -indev #{@source_path} -extract / #{@tempdir.to_s} &>/dev/null"])
+        Process.run("chmod", args: ["-R u+w #{@tempdir.to_s}"])
+        Process.run("rm", args: ["-rf #{@tempdir.to_s}/'[BOOT]'"])
     end
 
     # Add autoinstall parameter
     def add_autoinstall()
         #TODO: probably don't need a Process.run(command to do this
-        Process.run("sed", args: {"-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/isolinux/txt.cfg"})
-        Process.run("sed", args: {"-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/grub.cfg"})
-        Process.run("sed", args: {"-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/loopback.cfg"})
+        Process.run("sed", args: ["-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/isolinux/txt.cfg"])
+        Process.run("sed", args: ["-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/grub.cfg"])
+        Process.run("sed", args: ["-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/loopback.cfg"])
     end
 
     # apply all in one
@@ -165,22 +165,22 @@ class Build < Admiral::Command
         
         # create new dir in tempdir
         Dir.new("#{@tempdir.to_s}/nocloud")
-        Process.run("cp", args: {"#{flags.user_data} #{@tempdir.to_s}/nocloud/user-data"})
+        Process.run("cp", args: ["#{flags.user_data} #{@tempdir.to_s}/nocloud/user-data"])
         if flags.meta_data != nil
-            Process.run("cp", args: {"#{flags.meta_data} #{@tempdir.to_s}/nocloud/meta-data"})
+            Process.run("cp", args: ["#{flags.meta_data} #{@tempdir.to_s}/nocloud/meta-data"])
         else
-            Process.run("touch", args: {"#{@tempdir.to_s}/nocloud/meta-data"})
+            Process.run("touch", args: ["#{@tempdir.to_s}/nocloud/meta-data"])
         end
         
         # configure kernel command line
-        Process.run("sed", args: {"-i -e 's,---, ds=nocloud;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/isolinux/txt.cfg"})
-        Process.run("sed", args: {"-i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/grub.cfg"})
-        Process.run("sed", args: {"-i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/loopback.cfg"})
+        Process.run("sed", args: ["-i -e 's,---, ds=nocloud;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/isolinux/txt.cfg"])
+        Process.run("sed", args: ["-i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/grub.cfg"])
+        Process.run("sed", args: ["-i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/loopback.cfg"])
     end
 
     # repackage iso and write to destination
     def repackage()
-        Process.run("xorriso", args: {"-as mkisofs -r -V ubuntu-autoinstall -J -b #{tempdir.to_s}/isolinux/isolinux.bin -c #{tempdir.to_s}/isolinux/boot.cat -no-emul-boot -boot-load-size 4 -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -boot-info-table -input-charset utf-8 -eltorito-alt-boot -e #{tempdir.to_s}/boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -o #{destination_iso} . &>/dev/null"})
+        Process.run("xorriso", args: ["-as mkisofs -r -V ubuntu-autoinstall -J -b #{tempdir.to_s}/isolinux/isolinux.bin -c #{tempdir.to_s}/isolinux/boot.cat -no-emul-boot -boot-load-size 4 -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -boot-info-table -input-charset utf-8 -eltorito-alt-boot -e #{tempdir.to_s}/boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -o #{destination_iso} . &>/dev/null"])
     end
 
 
@@ -194,7 +194,7 @@ class Build < Admiral::Command
 
         # Check all Process.run(requirements
         puts "🔎 Checking for required utilities...\n"
-        #validate_requirements()
+        validate_requirements()
         puts "👍 All required utilities are installed.\n\n"
 
         puts "🔨 Creating temporary directory.\n"
