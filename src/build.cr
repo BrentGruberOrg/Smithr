@@ -1,9 +1,23 @@
+require "http/client"
+require "uri"
 require "admiral"
+require "tempdir"
 
 class UninstalledException < Exception
 end
 
 class Build < Admiral::Command
+    # Smithr build subcommand
+
+
+    # Required software for running build command
+    @requirements = ["xorriso", "sed", "curl", "gpg"]
+    @download_uri = "https://cdimage.ubuntu.com/ubuntu-server/focal/daily-live/current/focal-live-server-amd64.iso"
+    
+    def tempdir
+        @tempdir
+    end
+
     # Build will create a new iso image based on given values
     define_help description: "Build a new autoinstall iso image"
 
@@ -51,37 +65,102 @@ class Build < Admiral::Command
 
     # Check if a requirement exists in the current filesystem
     def check_req(name)
-
         req = system "command -v #{name}"
         if !req
-            raise UninstalledException.new("🛠 Please install #{name} to continue")
+            raise UninstalledException.new("🛠 Please install #{name} to continue\n\n")
         end
+    end
+
+    # Check list of requirements
+    #
+    # Alerts user to install any uninstalled requirements
+    # and exits program if any are found
+    def validate_requirements()
+    
+        begin
+            @requirements.each do |req|
+                check_req(req)
+            end
+        rescue ex 
+            abort(ex)
+        end
+
+    end
+
+    def download_iso()
+        
+        begin
+            uri = URI.parse(@download_uri)
+            HTTP::Client.get(uri) do |response|
+                File.write("#{@tempdir.to_s}/source.iso", response.body_io)
+            end
+        rescue ex
+            abort(ex)
+        end
+    end
+
+    # Validate a string to ensure it is a valid path and iso format
+    # 
+    # Returns whether source matches unix path directory and ends with .iso
+    def validate_iso(iso_file : String | Nil) : Bool
+
+        file = iso_file || ""
+
+        exists = File.exists?(file)
+        is_iso = file.ends_with?(".iso")
+        exists && is_iso
+    end
+
+    # Identify iso based on whether source flag is defined
+    #
+    # if undefined, the latest ubuntu server 20.04 iso will be downloaded
+    # otherwise file will be used from filesystem
+    def identify_iso()
+
+        puts "\n"
+        begin
+            if flags.source != nil
+                valid = validate_iso(flags.source)
+                if !valid
+                    abort("\n\n🚫 Please provide a valid iso file\n\n")
+                end
+                puts "using #{flags.source} as source iso"
+            else
+                download_iso()
+            end
+        rescue ex
+            abort(ex)
+        end
+        puts "\n"
     end
 
 
     def run
         # Intro prints
-        puts "-----------------"
-        puts "Welcome to Smithr"
+        puts "\n\n-----------------"
+        puts "Welcome to Smithr Build"
         puts "-----------------"
         puts "\n"
 
         # Check all system requirements
-        puts "🔎 Checking for required utilities..."
+        puts "🔎 Checking for required utilities...\n"
+        #validate_requirements()
+        puts "👍 All required utilities are installed.\n\n"
 
-        begin
-            check_req("xorriso")
-            check_req("sed")
-            check_req("curl")
-            check_req("gpg")
-        rescue ex
-            abort(ex)
-        end
+        puts "🔨 Creating temporary directory.\n"
 
-        puts "👍 All required utilities are installed."
+        @tempdir = TempDir.new "smithr"
 
         # Check for source flag
+        # if not defined, download latest iso
+        puts "💾 Identifying Source Iso.\n"
 
+        identify_iso()
+
+        puts "✅ Source Iso Ready.\n\n"
+
+
+        puts "✅ Fin"
 
     end
 end

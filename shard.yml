@@ -10,3 +10,5 @@ description: |
 dependencies:
   admiral:
     github: jwaldrip/admiral.cr
+  tempdir:
+    github: sam0x17/tempdir
