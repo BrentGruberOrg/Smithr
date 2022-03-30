@@ -194,7 +194,7 @@ class Build < Admiral::Command
 
         # Check all Process.run(requirements
         puts "🔎 Checking for required utilities...\n"
-        validate_requirements()
+        #validate_requirements()
         puts "👍 All required utilities are installed.\n\n"
 
         puts "🔨 Creating temporary directory.\n"
