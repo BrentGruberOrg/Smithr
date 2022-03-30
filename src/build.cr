@@ -14,9 +14,11 @@ class Build < Admiral::Command
     @requirements = ["xorriso", "sed", "curl", "gpg"]
     @download_uri = "https://cdimage.ubuntu.com/ubuntu-server/focal/daily-live/current/focal-live-server-amd64.iso"
     
-    def tempdir
-        @tempdir
-    end
+    property tempdir
+    property source_path
+    property destination_iso
+
+
 
     # Build will create a new iso image based on given values
     define_help description: "Build a new autoinstall iso image"
@@ -88,11 +90,17 @@ class Build < Admiral::Command
     end
 
     def download_iso()
-        
+
+        @source_path = "#{@tempdir.to_s}/source.iso"
+        # TODO: There's probably a better solution for this in the crystal community
+        if  !(file_path = @source_path)
+            abort("Could not open source directory to write")
+        end 
+
         begin
             uri = URI.parse(@download_uri)
             HTTP::Client.get(uri) do |response|
-                File.write("#{@tempdir.to_s}/source.iso", response.body_io)
+                File.write(file_path, response.body_io)
             end
         rescue ex
             abort(ex)
@@ -124,6 +132,7 @@ class Build < Admiral::Command
                 if !valid
                     abort("\n\n🚫 Please provide a valid iso file\n\n")
                 end
+                @source_path = flags.source
                 puts "using #{flags.source} as source iso"
             else
                 download_iso()
@@ -134,7 +143,48 @@ class Build < Admiral::Command
         puts "\n"
     end
 
+    # Extract source iso image to temp directory
+    def extract_iso_image()
+        system "xorriso -osirrox on -indev #{@source_path} -extract / #{@tempdir.to_s} &>/dev/null"
+        system "chmod -R u+w #{@tempdir.to_s}"
+        system "rm -rf #{@tempdir.to_s}/'[BOOT]'"
+    end
 
+    # Add autoinstall parameter
+    def add_autoinstall()
+        #TODO: probably don't need a system command to do this
+        system "sed -i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/isolinux/txt.cfg"
+        system "sed -i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/grub.cfg"
+        system "sed -i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/loopback.cfg"
+    end
+
+    # apply all in one
+    def apply_all_in_one()
+
+        #TODO: Need to do validation on input files
+        
+        # create new dir in tempdir
+        Dir.new("#{@tempdir.to_s}/nocloud")
+        system "cp #{flags.user_data} #{@tempdir.to_s}/nocloud/user-data"
+        if flags.meta_data != nil
+            system "cp #{flags.meta_data} #{@tempdir.to_s}/nocloud/meta-data"
+        else
+            system "touch #{@tempdir.to_s}/nocloud/meta-data"
+        end
+        
+        # configure kernel command line
+        system "sed -i -e 's,---, ds=nocloud;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/isolinux/txt.cfg"
+        system "sed -i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/grub.cfg"
+        system "sed -i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/loopback.cfg"
+    end
+
+    # repackage iso and write to destination
+    def repackage()
+        system "cd #{tempdir.to_s} && xorriso -as mkisofs -r -V ubuntu-autoinstall -J -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -boot-info-table -input-charset utf-8 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -o #{destination_iso} . &>/dev/null && cd -"
+    end
+
+
+    # Entry point to build subcommand
     def run
         # Intro prints
         puts "\n\n-----------------"
@@ -159,6 +209,32 @@ class Build < Admiral::Command
 
         puts "✅ Source Iso Ready.\n\n"
 
+        # extract source
+        puts "🔧 Extracting ISO image...\n"
+        extract_iso_image()
+        puts "👍 Extracted to #{@tempdir.to_s}"
+
+        # add autoinstall param
+        puts "🧩 Adding autoinstall parameter to kernel command line..."
+        add_autoinstall()
+        puts "👍 Added parameter to UEFI and BIOS kernel command lines."
+
+        if flags.all_in_one
+            puts "🧩 Adding user-data and meta-data files..."
+            apply_all_in_one()
+            puts "👍 Added data and configured kernel command line."
+        end
+
+        puts "📦 Repackaging extracted files into an ISO image..."
+
+        if flags.destination != nil
+            @destination_iso = flags.destination
+        else
+            @destination_iso = "./output.iso"
+        end
+
+        repackage()
+        puts "👍 Repackaged into #{destination_iso}"
 
         puts "✅ Fin"
 
