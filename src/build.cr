@@ -67,7 +67,7 @@ class Build < Admiral::Command
 
     # Check if a requirement exists in the current filesystem
     def check_req(name)
-        req = system "command -v #{name}"
+        req = Process.run("command", args: {"-v #{name}"})
         if !req
             raise UninstalledException.new("🛠 Please install #{name} to continue\n\n")
         end
@@ -145,17 +145,17 @@ class Build < Admiral::Command
 
     # Extract source iso image to temp directory
     def extract_iso_image()
-        system "xorriso -osirrox on -indev #{@source_path} -extract / #{@tempdir.to_s} &>/dev/null"
-        system "chmod -R u+w #{@tempdir.to_s}"
-        system "rm -rf #{@tempdir.to_s}/'[BOOT]'"
+        Process.run("xorriso", args: {"-osirrox on -indev #{@source_path} -extract / #{@tempdir.to_s} &>/dev/null"})
+        Process.run("chmod", args: {"-R u+w #{@tempdir.to_s}"})
+        Process.run("rm", args: {"-rf #{@tempdir.to_s}/'[BOOT]'"})
     end
 
     # Add autoinstall parameter
     def add_autoinstall()
-        #TODO: probably don't need a system command to do this
-        system "sed -i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/isolinux/txt.cfg"
-        system "sed -i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/grub.cfg"
-        system "sed -i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/loopback.cfg"
+        #TODO: probably don't need a Process.run(command to do this
+        Process.run("sed", args: {"-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/isolinux/txt.cfg"})
+        Process.run("sed", args: {"-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/grub.cfg"})
+        Process.run("sed", args: {"-i -e 's/---/ autoinstall ---/g' #{tempdir.to_s}/boot/grub/loopback.cfg"})
     end
 
     # apply all in one
@@ -165,22 +165,22 @@ class Build < Admiral::Command
         
         # create new dir in tempdir
         Dir.new("#{@tempdir.to_s}/nocloud")
-        system "cp #{flags.user_data} #{@tempdir.to_s}/nocloud/user-data"
+        Process.run("cp", args: {"#{flags.user_data} #{@tempdir.to_s}/nocloud/user-data"})
         if flags.meta_data != nil
-            system "cp #{flags.meta_data} #{@tempdir.to_s}/nocloud/meta-data"
+            Process.run("cp", args: {"#{flags.meta_data} #{@tempdir.to_s}/nocloud/meta-data"})
         else
-            system "touch #{@tempdir.to_s}/nocloud/meta-data"
+            Process.run("touch", args: {"#{@tempdir.to_s}/nocloud/meta-data"})
         end
         
         # configure kernel command line
-        system "sed -i -e 's,---, ds=nocloud;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/isolinux/txt.cfg"
-        system "sed -i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/grub.cfg"
-        system "sed -i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/loopback.cfg"
+        Process.run("sed", args: {"-i -e 's,---, ds=nocloud;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/isolinux/txt.cfg"})
+        Process.run("sed", args: {"-i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/grub.cfg"})
+        Process.run("sed", args: {"-i -e 's,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g' #{tempdir.to_s}/boot/grub/loopback.cfg"})
     end
 
     # repackage iso and write to destination
     def repackage()
-        system "cd #{tempdir.to_s} && xorriso -as mkisofs -r -V ubuntu-autoinstall -J -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -boot-info-table -input-charset utf-8 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -o #{destination_iso} . &>/dev/null && cd -"
+        Process.run("cd", args: {"#{tempdir.to_s} xorriso -as mkisofs -r -V ubuntu-autoinstall -J -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -isohybrid-mbr /usr/lib/ISOLINUX/isohdpfx.bin -boot-info-table -input-charset utf-8 -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -isohybrid-gpt-basdat -o #{destination_iso} . &>/dev/null && cd -"})
     end
 
 
@@ -192,7 +192,7 @@ class Build < Admiral::Command
         puts "-----------------"
         puts "\n"
 
-        # Check all system requirements
+        # Check all Process.run(requirements
         puts "🔎 Checking for required utilities...\n"
         #validate_requirements()
         puts "👍 All required utilities are installed.\n\n"
