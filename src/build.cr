@@ -180,7 +180,12 @@ class Build < Admiral::Command
 
     # repackage iso and write to destination
     def repackage()
-        Process.run("xorriso", args: ["-as", "mkisofs", "-r", "-V", "ubuntu-autoinstall", "-J", "-b", "#{tempdir.to_s}/isolinux/isolinux.bin", "-c", "#{tempdir.to_s}/isolinux/boot.cat", "-no-emul-boot", "-boot-load-size", "4", "-isohybrid-mbr", "/usr/lib/ISOLINUX/isohdpfx.bin", "-boot-info-table", "-input-charset", "utf-8", "-eltorito-alt-boot", "-e", "#{tempdir.to_s}/boot/grub/efi.img", "-no-emul-boot", "-isohybrid-gpt-basdat", "-o", "#{destination_iso}", ".", "&>/dev/null"])
+        reader, writer = IO.pipe
+        Process.run("xorriso", args: ["-as", "mkisofs", "-r", "-V", "ubuntu-autoinstall", "-J", "-b", "#{tempdir.to_s}/isolinux/isolinux.bin", "-c", "#{tempdir.to_s}/isolinux/boot.cat", "-no-emul-boot", "-boot-load-size", "4", "-isohybrid-mbr", "/usr/lib/ISOLINUX/isohdpfx.bin", "-boot-info-table", "-input-charset", "utf-8", "-eltorito-alt-boot", "-e", "#{tempdir.to_s}/boot/grub/efi.img", "-no-emul-boot", "-isohybrid-gpt-basdat", "-o", "#{destination_iso}", ".", "&>/dev/null"], output: writer do |process| )
+            until process.terminated?
+                line = reader.gets
+                puts line
+            end
     end
 
 
@@ -198,7 +203,6 @@ class Build < Admiral::Command
         puts "👍 All required utilities are installed.\n\n"
 
         puts "🔨 Creating temporary directory.\n"
-
         @tempdir = TempDir.new "smithr"
 
         # Check for source flag
