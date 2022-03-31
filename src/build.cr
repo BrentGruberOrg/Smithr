@@ -176,6 +176,12 @@ class Build < Admiral::Command
         Process.run("sed", args: ["-i", "-e", "'s,---, ds=nocloud;s=/cdrom/nocloud/", "---,g'", "#{tempdir.to_s}/isolinux/txt.cfg"])
         Process.run("sed", args: ["-i", "-e", "'s,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g'", "#{tempdir.to_s}/boot/grub/grub.cfg"])
         Process.run("sed", args: ["-i", "-e", "'s,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g'", "#{tempdir.to_s}/boot/grub/loopback.cfg"])
+
+
+        stdout = IO::Memory.new
+        Process.run("cat", args: ["#{tempdir.to_s}/isolinux/txt.cfg"], output: stdout)
+        puts stdout.to_s
+
     end
 
     # repackage iso and write to destination
