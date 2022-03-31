@@ -178,7 +178,7 @@ class Build < Admiral::Command
         Process.run("sed", args: ["-i", "-e", "'s,---, ds=nocloud\\\;s=/cdrom/nocloud/  ---,g'", "#{tempdir.to_s}/boot/grub/loopback.cfg"])
 
 
-        `cat #{tempdir.to_s}/isolinux/txt.cfg`
+        system "cat #{tempdir.to_s}/isolinux/txt.cfg"
 
     end
 
