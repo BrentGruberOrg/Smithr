@@ -220,6 +220,8 @@ class Build < Admiral::Command
         extract_iso_image()
         puts "👍 Extracted to #{@tempdir.to_s}"
 
+        system "ls #{@tempdir.to_s}"
+
         # add autoinstall param
         puts "🧩 Adding autoinstall parameter to kernel command line..."
         add_autoinstall()
