@@ -145,6 +145,7 @@ class Build < Admiral::Command
 
     # Extract source iso image to temp directory
     def extract_iso_image()
+        system "xorriso -osirrox on -indev #{@source_path} -extract / #{@tempdir.to_s} &>/dev/null"
         Process.run("xorriso", args: ["-osirrox", "on", "-indev", "#{@source_path}", "-extract", "/", "#{@tempdir.to_s}", "&>/dev/null"])
         Process.run("chmod", args: ["-R", "u+w", "#{@tempdir.to_s}"])
         Process.run("rm", args: ["-rf", "#{@tempdir.to_s}/'[BOOT]'"])
@@ -219,7 +220,8 @@ class Build < Admiral::Command
         puts "🔧 Extracting ISO image...\n"
         extract_iso_image()
         puts "👍 Extracted to #{@tempdir.to_s}"
-
+    
+    
         system "ls #{@tempdir.to_s}"
 
         # add autoinstall param
