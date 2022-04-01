@@ -227,11 +227,15 @@ class Build < Admiral::Command
         add_autoinstall()
         puts "👍 Added parameter to UEFI and BIOS kernel command lines."
 
+        system "ls #{@tempdir.to_s}"
+
         if flags.all_in_one
             puts "🧩 Adding user-data and meta-data files..."
             apply_all_in_one()
             puts "👍 Added data and configured kernel command line."
         end
+
+        system "ls #{@tempdir.to_s}"
 
         puts "📦 Repackaging extracted files into an ISO image..."
 
