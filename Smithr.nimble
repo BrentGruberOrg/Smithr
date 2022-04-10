@@ -12,3 +12,4 @@ bin           = @["Smithr"]
 
 requires "nim >= 1.6.4"
 requires "cligen >= 1.5.23"
+requires "tempdir >= 1.0.1"
